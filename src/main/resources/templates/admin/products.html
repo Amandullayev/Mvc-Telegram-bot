@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Mahsulotlar</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+        th { background: #f4f4f4; }
+        .btn { padding: 5px 10px; margin: 2px; text-decoration: none; color: white; }
+        .btn-add { background: #28a745; }
+        .btn-delete { background: #dc3545; }
+        .form-group { margin: 10px 0; }
+    </style>
+</head>
+<body>
+<h1>Mahsulotlar boshqaruvi</h1>
+
+<form th:action="@{/admin/products}" method="post">
+    <div class="form-group">
+        <input type="text" name="name" placeholder="Nomi" required />
+    </div>
+    <div class="form-group">
+        <textarea name="description" placeholder="Tavsif"></textarea>
+    </div>
+    <div class="form-group">
+        <input type="number" step="0.01" name="price" placeholder="Narxi" required />
+    </div>
+    <button type="submit" class="btn btn-add">Qo‘shish</button>
+</form>
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Nomi</th>
+        <th>Tavsif</th>
+        <th>Narxi</th>
+        <th>Amal</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="p : ${products}">
+        <td th:text="${p.id}"></td>
+        <td th:text="${p.name}"></td>
+        <td th:text="${p.description}"></td>
+        <td th:text="${p.price} + ' UZS'"></td>
+        <td>
+            <a th:href="@{'/admin/products/delete/' + ${p.id}}"
+               class="btn btn-delete"
+               onclick="return confirm('O‘chirishni xohlaysizmi?')">O‘chirish</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<br/>
+<a href="/">Botga qaytish</a>
+</body>
+</html>

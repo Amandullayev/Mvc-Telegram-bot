@@ -1,0 +1,54 @@
+<!-- src/main/resources/templates/admin/orders.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Buyurtmalar</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+        th { background: #f4f4f4; }
+        .status-btn { padding: 5px 10px; margin: 2px; color: white; text-decoration: none; border-radius: 4px; }
+        .new { background: #dc3545; }
+        .accepted { background: #ffc107; color: black; }
+        .delivering { background: #17a2b8; }
+        .completed { background: #28a745; }
+    </style>
+</head>
+<body>
+<h1>Buyurtmalar</h1>
+<a href="/admin/products">Mahsulotlar</a> | <a href="/admin/orders">Buyurtmalar</a>
+
+<div th:each="order : ${orders}">
+    <h3>Buyurtma #<span th:text="${order.id}"></span></h3>
+    <p>Foydalanuvchi: <b th:text="${order.userId}"></b> |
+        Vaqt: <span th:text="${order.createdAt}"></span></p>
+
+    <table>
+        <tr><th>Mahsulot</th><th>Miqdor</th><th>Narx</th></tr>
+        <tr th:each="item : ${order.items}">
+            <td th:text="${item.productName}"></td>
+            <td th:text="${item.quantity}"></td>
+            <td th:text="${item.price * item.quantity} + ' UZS'"></td>
+        </tr>
+        <tr><td colspan="2"><b>Jami</b></td><td><b th:text="${order.totalPrice} + ' UZS'"></b></td></tr>
+    </table>
+
+    <div>
+        <a th:href="@{'/admin/orders/status/' + ${order.id} + '?status=ACCEPTED'}"
+           th:class="'status-btn ' + (${order.status} == 'NEW' ? 'accepted' : '')"
+           th:text="'Qabul qilindi'">Qabul qilindi</a>
+
+        <a th:href="@{'/admin/orders/status/' + ${order.id} + '?status=DELIVERING'}"
+           th:class="'status-btn ' + (${order.status} == 'ACCEPTED' ? 'delivering' : '')"
+           th:text="'Yetkazilmoqda'">Yetkazilmoqda</a>
+
+        <a th:href="@{'/admin/orders/status/' + ${order.id} + '?status=COMPLETED'}"
+           th:class="'status-btn ' + (${order.status} == 'DELIVERING' ? 'completed' : '')"
+           th:text="'Yakunlandi'">Yakunlandi</a>
+    </div>
+    <hr/>
+</div>
+</body>
+</html>
