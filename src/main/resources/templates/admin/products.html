@@ -2,60 +2,79 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Admin - Mahsulotlar</title>
+    <title>Mahsulotlar</title>
     <style>
-        body { font-family: Arial; margin: 40px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-        th { background: #f4f4f4; }
-        .btn { padding: 5px 10px; margin: 2px; text-decoration: none; color: white; }
-        .btn-add { background: #28a745; }
-        .btn-delete { background: #dc3545; }
-        .form-group { margin: 10px 0; }
+        body { font-family: Arial; margin: 40px; background: #f4f4f4; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #3498db; color: white; }
+        tr:hover { background: #f1f1f1; }
+        .btn { padding: 8px 16px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-add { background: #27ae60; color: white; }
+        .btn-delete { background: #e74c3c; color: white; }
+        .form-group { margin: 15px 0; }
+        input, button { padding: 10px; margin: 5px 0; width: 100%; border: 1px solid #ddd; border-radius: 5px; }
+        button[type="submit"] { background: #3498db; color: white; font-weight: bold; }
     </style>
 </head>
 <body>
-<h1>Mahsulotlar boshqaruvi</h1>
+<div class="container">
+    <h1>Mahsulotlar boshqaruvi</h1>
 
-<form th:action="@{/admin/products}" method="post">
-    <div class="form-group">
-        <input type="text" name="name" placeholder="Nomi" required />
-    </div>
-    <div class="form-group">
-        <textarea name="description" placeholder="Tavsif"></textarea>
-    </div>
-    <div class="form-group">
-        <input type="number" step="0.01" name="price" placeholder="Narxi" required />
-    </div>
-    <button type="submit" class="btn btn-add">Qo‘shish</button>
-</form>
+    <form th:action="@{/admin/products}" method="post">
+        <div class="form-group">
+            <input type="text" name="name" placeholder="Nomi" required />
+        </div>
+        <div class="form-group">
+            <input type="text" name="description" placeholder="Tavsif" />
+        </div>
+        <div class="form-group">
+            <input type="number" step="0.01" name="price" placeholder="Narxi (UZS)" required />
+        </div>
+        <div class="form-group">
+            <input type="text" name="imgUrl" placeholder="Rasm URL (ixtiyoriy)" />
+        </div>
+        <button type="submit" class="btn btn-add">Qo‘shish</button>
+    </form>
 
-<table>
-    <thead>
-    <tr>
-        <th>ID</th>
-        <th>Nomi</th>
-        <th>Tavsif</th>
-        <th>Narxi</th>
-        <th>Amal</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="p : ${products}">
-        <td th:text="${p.id}"></td>
-        <td th:text="${p.name}"></td>
-        <td th:text="${p.description}"></td>
-        <td th:text="${p.price} + ' UZS'"></td>
-        <td>
-            <a th:href="@{'/admin/products/delete/' + ${p.id}}"
-               class="btn btn-delete"
-               onclick="return confirm('O‘chirishni xohlaysizmi?')">O‘chirish</a>
-        </td>
-    </tr>
-    </tbody>
-</table>
+    <hr>
 
-<br/>
-<a href="/">Botga qaytish</a>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nomi</th>
+            <th>Tavsif</th>
+            <th>Narxi</th>
+            <th>Holati</th>
+            <th>Amal</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${products}">
+            <td th:text="${p.id}"></td>
+            <td th:text="${p.name}"></td>
+            <td th:text="${p.description}"></td>
+            <td th:text="${p.price} + ' UZS'"></td>  <!-- TUZATILDI! -->
+            <td th:text="${p.active} ? 'Faol' : 'O‘chirilgan'"
+                th:style="${p.active} ? 'color:green' : 'color:red'"></td>
+            <td>
+                <form th:action="@{'/admin/products/' + ${p.id} + '/delete'}" method="post" style="display:inline">
+                    <button type="submit" class="btn btn-delete"
+                            th:onclick="'return confirm(\'O‘chirishni tasdiqlaysizmi?\');'">
+                        O‘chirish
+                    </button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div style="margin-top: 20px; text-align: center;">
+        <a href="/admin/orders" class="btn" style="background: #8e44ad; color: white;">Buyurtmalar</a>
+    </div>
+</div>
 </body>
 </html>

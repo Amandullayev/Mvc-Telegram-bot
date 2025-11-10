@@ -1,17 +1,15 @@
 package org.example.mvc_tg_bot.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.example.mvc_tg_bot.model.Cart;
 import org.example.mvc_tg_bot.model.Product;
 import org.example.mvc_tg_bot.repository.CartRepository;
-
+import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class CartService {
-
     private final CartRepository cartRepository;
     private final ProductService productService;
 

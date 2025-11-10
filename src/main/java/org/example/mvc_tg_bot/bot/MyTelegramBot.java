@@ -7,15 +7,15 @@ import org.example.mvc_tg_bot.service.ProductService;
 import org.springframework.beans.factory.annotation.Value;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.util.ArrayList;
 import java.util.List;
 
-// @Component O‘CHIRILDI! Chunki BotConfig da yaratiladi
 public class MyTelegramBot extends TelegramLongPollingBot {
 
     private final String token;
@@ -26,7 +26,6 @@ public class MyTelegramBot extends TelegramLongPollingBot {
     private final CartService cartService;
     private final ProductService productService;
 
-    // BITTA KATTA KONSTRUKTOR — HAMMA NARSANI BU YERGA OLAMIZ
     public MyTelegramBot(
             @Value("${bot.token}") String token,
             @Value("${bot.username}") String username,
@@ -44,14 +43,9 @@ public class MyTelegramBot extends TelegramLongPollingBot {
     }
 
     @Override
-    public String getBotUsername() {
-        return username;
-    }
-
+    public String getBotUsername() { return username; }
     @Override
-    public String getBotToken() {
-        return token;
-    }
+    public String getBotToken() { return token; }
 
     @Override
     public void onUpdateReceived(Update update) {
@@ -69,7 +63,6 @@ public class MyTelegramBot extends TelegramLongPollingBot {
             switch (data) {
                 case "MENU" -> showMenu(chatId);
                 case "CART" -> showCart(chatId);
-                case "SETTINGS" -> showSettings(chatId);
                 case "MAIN_MENU" -> sendWelcomeMessage(chatId);
                 case "ORDER" -> processOrder(chatId);
                 case "CLEAR_CART" -> clearCart(chatId);
@@ -83,7 +76,6 @@ public class MyTelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    // === ADD TO CART ===
     private void addToCart(Long chatId, Long productId) {
         cartService.addToCart(chatId, productId);
         Product p = productService.findById(productId);
@@ -92,7 +84,6 @@ public class MyTelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    // === WELCOME ===
     private void sendWelcomeMessage(Long chatId) {
         String welcome = """
                 Assalomu alaykum! 
@@ -103,50 +94,64 @@ public class MyTelegramBot extends TelegramLongPollingBot {
                 • Savatchaga qo‘shishingiz
                 • Buyurtma berishingiz mumkin
                 """;
-
         sendMessage(chatId, welcome, getMainMenuKeyboard());
     }
 
-    // === MAIN MENU ===
     private InlineKeyboardMarkup getMainMenuKeyboard() {
-        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-
-        rows.add(List.of(createButton("Menyu", "MENU")));
-        rows.add(List.of(
-                createButton("Savatcha", "CART"),
-                createButton("Sozlamalar", "SETTINGS")
-        ));
-
-        markup.setKeyboard(rows);
-        return markup;
+        return InlineKeyboardMarkup.builder()
+                .keyboardRow(List.of(createButton("Menyu", "MENU")))
+                .keyboardRow(List.of(
+                        createButton("Savatcha", "CART")
+                ))
+                .build();
     }
 
-    // === SHOW MENU ===
     private void showMenu(Long chatId) {
         List<Product> products = productService.getActiveProducts();
         if (products.isEmpty()) {
-            sendMessage(chatId, "Hozircha mahsulot yo‘q.", getBackToMainKeyboard());
+            sendMessage(chatId, "<b>Menyu bo‘sh</b>", getBackToMainKeyboard());
             return;
         }
 
         for (Product p : products) {
-            String text = """
-                    *%s*
-                    %s
-                    *%.0f UZS*
-                    """.formatted(p.getName(),
-                    p.getDescription() != null ? p.getDescription() : "",
-                    p.getPrice());
+            String caption = """
+                <b>%s</b>
+                %s
+                
+                <b>%.0f UZS</b>
+                """.formatted(
+                    p.getName(),
+                    p.getDescription() != null ? p.getDescription() : "Tavsif yo‘q",
+                    p.getPrice()
+            );
 
-            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-            markup.setKeyboard(List.of(List.of(createButton("Qo‘shish", "ADD_" + p.getId()))));
-            sendMessage(chatId, text, markup);
+            InlineKeyboardMarkup keyboard = InlineKeyboardMarkup.builder()
+                    .keyboardRow(List.of(createButton("Qo‘shish", "ADD_" + p.getId())))
+                    .build();
+
+            if (p.getImgUrl() != null && !p.getImgUrl().isEmpty()) {
+                sendPhoto(chatId, p.getImgUrl(), caption, keyboard);
+            } else {
+                sendMessage(chatId, caption, keyboard);
+            }
         }
         sendMessage(chatId, "Orqaga", getBackToMainKeyboard());
     }
+    private void sendPhoto(Long chatId, String photoUrl, String caption, InlineKeyboardMarkup keyboard) {
+        SendPhoto photo = SendPhoto.builder()
+                .chatId(chatId.toString())
+                .photo(new InputFile(photoUrl))
+                .caption(caption)
+                .parseMode("HTML")
+                .replyMarkup(keyboard)
+                .build();
+        try {
+            execute(photo);
+        } catch (TelegramApiException e) {
+            sendMessage(chatId, caption, keyboard); // Agar rasm bo‘lmasa
+        }
+    }
 
-    // === SHOW CART ===
     private void showCart(Long chatId) {
         List<Cart> cartItems = cartService.getCart(chatId);
         if (cartItems.isEmpty()) {
@@ -163,22 +168,15 @@ public class MyTelegramBot extends TelegramLongPollingBot {
         }
         sb.append("\n*Jami: %.0f UZS*".formatted(cartService.getTotalPrice(chatId)));
 
-        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-        markup.setKeyboard(List.of(
-                List.of(createButton("Buyurtma berish", "ORDER")),
-                List.of(createButton("Tozalash", "CLEAR_CART")),
-                List.of(createButton("Orqaga", "MAIN_MENU"))
-        ));
+        InlineKeyboardMarkup markup = InlineKeyboardMarkup.builder()
+                .keyboardRow(List.of(createButton("Buyurtma berish", "ORDER")))
+                .keyboardRow(List.of(createButton("Tozalash", "CLEAR_CART")))
+                .keyboardRow(List.of(createButton("Orqaga", "MAIN_MENU")))
+                .build();
 
         sendMessage(chatId, sb.toString(), markup);
     }
 
-    // === SETTINGS ===
-    private void showSettings(Long chatId) {
-        sendMessage(chatId, "*Sozlamalar*\n• Til: O‘zbek\n• Valyuta: UZS", getBackToMainKeyboard());
-    }
-
-    // === ORDER ===
     private void processOrder(Long chatId) {
         Order order = orderService.createOrder(chatId);
         if (order == null) {
@@ -196,13 +194,11 @@ public class MyTelegramBot extends TelegramLongPollingBot {
         notifyAdminAboutNewOrder(order);
     }
 
-    // === CLEAR CART ===
     private void clearCart(Long chatId) {
         cartService.clearCart(chatId);
         sendMessage(chatId, "Savatcha tozalandi!", getBackToMainKeyboard());
     }
 
-    // === NOTIFY ADMIN ===
     private void notifyAdminAboutNewOrder(Order order) {
         if (adminId == null) return;
 
@@ -212,7 +208,7 @@ public class MyTelegramBot extends TelegramLongPollingBot {
         sb.append("Vaqt: ").append(order.getCreatedAt().toString().substring(11, 16)).append("\n\n");
 
         for (OrderItem item : order.getItems()) {
-            sb.append(String.format("• %s × %d = %.0f UZS\n",
+            sb.append(String.format("• %s × %d = %.0f U Pic\n",
                     item.getProductName(), item.getQuantity(),
                     item.getPrice() * item.getQuantity()));
         }
@@ -221,33 +217,28 @@ public class MyTelegramBot extends TelegramLongPollingBot {
         sendMessage(adminId, sb.toString());
     }
 
-    // === BACK BUTTON ===
     private InlineKeyboardMarkup getBackToMainKeyboard() {
-        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-        markup.setKeyboard(List.of(List.of(createButton("Orqaga", "MAIN_MENU"))));
-        return markup;
+        return InlineKeyboardMarkup.builder()
+                .keyboardRow(List.of(createButton("Orqaga", "MAIN_MENU")))
+                .build();
     }
 
-    // === BUTTON HELPER ===
     private InlineKeyboardButton createButton(String text, String callbackData) {
-        InlineKeyboardButton button = new InlineKeyboardButton();
-        button.setText(text);
-        button.setCallbackData(callbackData);
-        return button;
+        return InlineKeyboardButton.builder()
+                .text(text)
+                .callbackData(callbackData)
+                .build();
     }
 
-    // === SEND MESSAGE ===
     private void sendMessage(Long chatId, String text, InlineKeyboardMarkup keyboard) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId.toString());
-        message.setText(text);
-        message.setParseMode("Markdown");
-        if (keyboard != null) {
-            message.setReplyMarkup(keyboard);
-        }
+        SendMessage message = SendMessage.builder()
+                .chatId(chatId.toString())
+                .text(text)
+                .parseMode("HTML")
+                .replyMarkup(keyboard)
+                .build();
         executeSafely(message);
     }
-
     private void sendMessage(Long chatId, String text) {
         sendMessage(chatId, text, null);
     }

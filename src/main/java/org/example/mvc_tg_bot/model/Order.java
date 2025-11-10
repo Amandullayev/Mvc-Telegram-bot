@@ -9,7 +9,6 @@ import java.util.List;
 @Table(name = "orders")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Order {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -1,17 +1,15 @@
 package org.example.mvc_tg_bot.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.example.mvc_tg_bot.model.*;
 import org.example.mvc_tg_bot.repository.OrderRepository;
-
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class OrderService {
-
     private final OrderRepository orderRepository;
     private final CartService cartService;
 

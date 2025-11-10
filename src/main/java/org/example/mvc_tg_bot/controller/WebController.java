@@ -1,14 +1,13 @@
 package org.example.mvc_tg_bot.controller;
 
-
 import lombok.RequiredArgsConstructor;
 import org.example.mvc_tg_bot.model.OrderStatus;
 import org.example.mvc_tg_bot.service.OrderService;
+import org.example.mvc_tg_bot.service.ProductService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.example.mvc_tg_bot.model.Product;
-import org.example.mvc_tg_bot.service.ProductService;
 
 @Controller
 @RequestMapping("/admin")
@@ -17,6 +16,11 @@ public class WebController {
 
     private final ProductService productService;
     private final OrderService orderService;
+
+    @GetMapping
+    public String home() {
+        return "redirect:/admin/products";
+    }
 
     @GetMapping("/products")
     public String productsPage(Model model) {
@@ -30,14 +34,9 @@ public class WebController {
         return "redirect:/admin/products";
     }
 
-    @GetMapping("/products/delete/{id}")
+    @PostMapping("/products/{id}/delete")
     public String deleteProduct(@PathVariable Long id) {
         productService.delete(id);
-        return "redirect:/admin/products";
-    }
-
-    @GetMapping
-    public String adminHome() {
         return "redirect:/admin/products";
     }
 
@@ -52,4 +51,5 @@ public class WebController {
         orderService.updateStatus(id, status);
         return "redirect:/admin/orders";
     }
+
 }

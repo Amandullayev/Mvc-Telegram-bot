@@ -21,7 +21,7 @@ public class BotConfig {
             @Value("${bot.admin-id}") Long adminId,
             OrderService orderService,
             CartService cartService,
-            ProductService productService
+            ProductService productService+
     ) {
         return new MyTelegramBot(token, username, adminId, orderService, cartService, productService);
     }
